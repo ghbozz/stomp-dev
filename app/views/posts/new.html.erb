@@ -1,0 +1,14 @@
+<section>
+  <h1 class="font-bold text-4xl">Posts#new</h1>
+  <p>Find me in app/views/posts/new.html.erb</p>
+
+  <div class="mt-5">
+    <%= simple_form_for @post do |f| %>
+      <%= f.input :steps_data, as: :text %>
+      <%= f.input :title %>
+      <%= f.submit %>
+    <% end %>
+  </div>
+</section>
+
+<%= console %>
