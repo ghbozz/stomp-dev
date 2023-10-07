@@ -1,5 +1,5 @@
 class Post < ApplicationRecord
-  include Stomp
+  include Stomp::Model
 
   define_steps step_1: [:title], 
                step_2: [:description], 

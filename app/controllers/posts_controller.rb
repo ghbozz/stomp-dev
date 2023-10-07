@@ -1,10 +1,12 @@
 class PostsController < ApplicationController
+  include Stomp::Controller
+
   def show
     @post = Post.find(params[:id])
   end
 
   def new
-    build_new_post
+    @post = build_record_for(Post)
   end
 
   def create
@@ -30,14 +32,6 @@ class PostsController < ApplicationController
   end
 
   private
-
-  def build_new_post
-    if params[:serialized_steps_data]
-      @post = Post.new(serialized_steps_data: params[:serialized_steps_data])
-    else
-      @post = Post.new
-    end
-  end
 
   def post_params
     params.require(:post).permit(:title, :description, :content, :serialized_steps_data)
