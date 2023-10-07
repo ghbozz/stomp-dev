@@ -1,9 +1,9 @@
-<section>
+<section class="w-screen">
   <h1 class="font-bold text-4xl">Posts#new</h1>
   <p>Find me in app/views/posts/new.html.erb</p>
 
-  <div class="mt-5">
-    <%= simple_form_for @post, html: { data: { turbo: false } } do |f| %>
+  <div class="mt-5 w-full">
+    <%= simple_form_for @post do |f| %>
       <%= f.input :serialized_steps_data, as: :text %>
 
       <% if f.object.current_step_is? :step_1 %>
@@ -15,10 +15,16 @@
       <% end %>
 
       <% if f.object.current_step_is? :step_3 %>
-        <%= f.input :content %>
+        <%= f.input :content, input_html: { class: "w-full" } %>
       <% end %>
 
-      <%= f.submit %>
+      <div class="mt-5">
+        <%= f.submit "précédent", value: "previous", class: "bg-red-300 p-2 cursor-pointer shadow-sm rounded-sm" %>
+        <%= f.submit "title", value: "step_1", class: "bg-blue-300 p-2 cursor-pointer shadow-sm rounded-sm" %>
+        <%= f.submit "description", value: "step_2", class: "bg-pink-300 p-2 cursor-pointer shadow-sm rounded-sm" %>
+        <%= f.submit "content", value: "step_3", class: "bg-indigo-300 p-2 cursor-pointer shadow-sm rounded-sm" %>
+        <%= f.submit "suivant", value: "next", class: "bg-green-300 p-2 cursor-pointer shadow-sm rounded-sm" %>
+      </div>
     <% end %>
   </div>
 </section>

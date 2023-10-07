@@ -37,8 +37,18 @@ module Stomp
       end
     end
 
+    self.current_step ||= steps.first
+    self.completed_steps ||= []
+
     super
     update_attributes_from_step_data
+  end
+
+  def step!(step)
+    return next_step! if step == "next"
+    return previous_step! if step == "previous"
+
+    self.current_step = step
   end
 
   def next_step!
@@ -46,6 +56,13 @@ module Stomp
 
     index = steps.index(current_step)
     self.current_step = steps[index + 1]
+  end
+
+  def previous_step!
+    self.completed_steps.pop
+
+    index = steps.index(current_step)
+    self.current_step = steps[index - 1]
   end
 
   def current_step_is?(step)
