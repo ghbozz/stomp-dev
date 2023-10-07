@@ -1,10 +1,3 @@
-GIT
-  remote: https://github.com/ghbozz/stomp
-  revision: 070072b91a958515cac3d5ef8844e800b07cc18d
-  specs:
-    stomp (0.1.0)
-      activesupport
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -243,7 +236,6 @@ DEPENDENCIES
   sprockets-rails
   sqlite3 (~> 1.4)
   stimulus-rails
-  stomp!
   tailwindcss-rails
   turbo-rails
   tzinfo-data

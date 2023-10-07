@@ -12,21 +12,26 @@ class PostsController < ApplicationController
   def create
     @post = Post.new(post_params)
 
-    if @post.valid?
-      @post.step!(params[:commit])
+    # if @post.valid?
+    #   @post.step!(params[:commit])
 
-      if @post.completed? && @post.all_steps_valid?
-        @post.save
-        redirect_to post_path @post
-        return
-      end
+    #   if @post.completed? && @post.all_steps_valid?
+    #     @post.save
+    #     redirect_to post_path @post
+    #     return
+    #   end
 
-      redirect_to new_post_path(serialized_steps_data: @post.serialized_steps_data)
+    #   redirect_to next_step_path_for(@post, path: :new_post_path)
+    # elsif params[:commit] == "previous"
+    #   @post.previous_step!
+    #   render :new, status: :unprocessable_entity
+    # end
+
+    if params[:commit] == "create" && @post.all_steps_valid?
+      @post.save
+      redirect_to post_path @post
     else
-      if params[:commit] == "previous"
-        @post.previous_step!
-      end
-
+      @post.step!(params[:commit])
       render :new, status: :unprocessable_entity
     end
   end

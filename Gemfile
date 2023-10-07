@@ -53,7 +53,7 @@ gem "bootsnap", require: false
 gem "simple_form"
 gem "simple_form-tailwind"
 
-gem 'stomp', git: 'https://github.com/ghbozz/stomp'
+# gem 'stomp', git: 'https://github.com/ghbozz/stomp'
 
 
 group :development, :test do

@@ -6,7 +6,7 @@ module Stomp
     attr_accessor *STOMP_ATTRIBUTES
 
     included do
-      class_attribute :steps, :steps_attributes, :steps_data
+      class_attribute :steps, :steps_attributes, :steps_data, :stomp_validation
     end
 
     class_methods do
@@ -27,6 +27,10 @@ module Stomp
           validates_with validations, if: ->(record) { record.current_step == step }
         end
       end
+
+      def stomp!(options)
+        self.stomp_validation = options[:validate]
+      end
     end
 
     def initialize(*args)
@@ -37,8 +41,6 @@ module Stomp
           self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
         end
       end
-
-      raise
       
       self.current_step ||= steps.first
       self.completed_steps ||= []
@@ -50,12 +52,25 @@ module Stomp
     def step!(step)
       return next_step! if step.to_sym == :next
       return previous_step! if step.to_sym == :previous
+      return false unless steps.include?(step.to_sym)
+
+      if valid?
+        self.completed_steps << current_step unless completed_steps.include?(current_step)
+      else
+        self.completed_steps.delete(current_step)
+      end
+
+      if self.stomp_validation == :each_step
+        return all_steps_valid? unless completed_steps.include?(step.to_sym)
+      end
 
       self.current_step = step
     end
 
     def next_step!
-      return false unless valid?
+      if self.stomp_validation == :each_step
+        return false unless valid?
+      end
 
       if current_step == steps.last
         self.completed = true
