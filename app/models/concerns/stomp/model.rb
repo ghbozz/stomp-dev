@@ -37,6 +37,8 @@ module Stomp
           self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
         end
       end
+
+      raise
       
       self.current_step ||= steps.first
       self.completed_steps ||= []
