@@ -61,7 +61,7 @@ module Stomp
       end
 
       if self.stomp_validation == :each_step
-        return all_steps_valid? unless completed_steps.include?(step.to_sym)
+        return all_steps_valid?(after: step) unless completed_steps.include?(step.to_sym)
       end
 
       self.current_step = step
@@ -91,6 +91,14 @@ module Stomp
       end
     end
 
+    def has_previous_step?
+      steps.index(current_step) > 0
+    end
+
+    def has_next_step?
+      steps.index(current_step) < steps.length - 1
+    end
+
     def current_step_is?(step)
       current_step == step
     end
@@ -103,8 +111,8 @@ module Stomp
       completed
     end
 
-    def all_steps_valid?
-      stored_step = current_step
+    def all_steps_valid?(options = {})
+      stored_step = options[:after] || current_step
 
       steps.each do |step|
         self.current_step = step
