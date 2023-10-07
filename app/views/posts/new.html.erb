@@ -3,9 +3,21 @@
   <p>Find me in app/views/posts/new.html.erb</p>
 
   <div class="mt-5">
-    <%= simple_form_for @post do |f| %>
-      <%= f.input :steps_data, as: :text %>
-      <%= f.input :title %>
+    <%= simple_form_for @post, html: { data: { turbo: false } } do |f| %>
+      <%= f.input :serialized_steps_data, as: :text %>
+
+      <% if f.object.current_step_is? :step_1 %>
+        <%= f.input :title %>
+      <% end %>
+
+      <% if f.object.current_step_is? :step_2 %>
+        <%= f.input :description %>
+      <% end %>
+
+      <% if f.object.current_step_is? :step_3 %>
+        <%= f.input :content %>
+      <% end %>
+
       <%= f.submit %>
     <% end %>
   </div>

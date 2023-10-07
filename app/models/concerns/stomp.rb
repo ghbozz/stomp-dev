@@ -1,7 +1,7 @@
 module Stomp
   extend ActiveSupport::Concern
 
-  STOMP_ATTRIBUTES = [:current_step, :completed_steps, :steps_data]
+  STOMP_ATTRIBUTES = [:current_step, :completed_steps, :steps_data, :serialized_steps_data]
   attr_accessor *STOMP_ATTRIBUTES
 
   included do
@@ -13,8 +13,11 @@ module Stomp
       self.steps_attributes = steps.values.flatten + STOMP_ATTRIBUTES
       self.steps = steps.keys
 
-      define_method :steps_data do
-        attributes.select { |k, _| steps_attributes.include?(k.to_sym) }
+      define_method :serialized_steps_data do
+        attributes
+          .select { |k, _| steps_attributes.include?(k.to_sym) }
+          .merge("current_step" => current_step, "completed_steps" => completed_steps)
+          .to_json
       end
     end
 
@@ -26,23 +29,38 @@ module Stomp
   end
 
   def initialize(*args)
+    if args.first[:serialized_steps_data]
+      JSON.parse(args.first[:serialized_steps_data]).tap do |data|
+        self.steps_data = data
+        self.current_step = data["current_step"]
+        self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
+      end
+    end
+
     super
     update_attributes_from_step_data
   end
 
-  def save
-    return false unless valid?
+  def next_step!
+    self.completed_steps << current_step
 
-    super
+    index = steps.index(current_step)
+    self.current_step = steps[index + 1]
   end
+
+  def current_step_is?(step)
+    current_step.to_sym == step
+  end
+
+  def current_step=(step)
+    @current_step = step.to_sym
+  end
+
+  private
 
   def update_attributes_from_step_data
-    steps_data.each do |k, v|
-      send("#{k}=", v)
-    end
-  end
+    return if steps_data.nil?
 
-  # def all_steps_completed?
-  #   steps.all? { |step| completed_steps.include?(step) }
-  # end
+    steps_data.each { |k, v| send("#{k}=", v) if send(k).nil? }
+  end
 end
