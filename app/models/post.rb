@@ -5,6 +5,7 @@ class Post < ApplicationRecord
                step_2: [:description], 
                step_3: [:content] 
 
-  # define_step_validations step_1: PostTitleValidator
+  define_step_validations step_1: PostTitleValidator
+  define_step_validations step_2: PostDescriptionValidator
 end
 
