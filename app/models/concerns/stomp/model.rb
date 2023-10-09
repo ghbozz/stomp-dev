@@ -20,6 +20,16 @@ module Stomp
             .merge(current_step: current_step, completed_steps: completed_steps)
             .to_json
         end
+
+        steps.each do |step, attributes|
+          define_method "#{step}_attributes" do
+            attributes
+          end
+
+          define_method "#{step}?" do
+            current_step == step
+          end
+        end
       end
 
       def define_step_validations(step_validations)
