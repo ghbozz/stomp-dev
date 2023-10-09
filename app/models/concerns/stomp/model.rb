@@ -34,7 +34,13 @@ module Stomp
 
       def define_step_validations(step_validations)
         step_validations.each do |step, validations|
-          validates_with validations, if: ->(record) { record.current_step == step }
+          if validations.is_a? Hash
+            validations.each do |attribute, validation|
+              validates attribute, **validation, if: ->(record) { record.current_step == step }
+            end
+          else
+            validates_with validations, if: ->(record) { record.current_step == step }
+          end
         end
       end
 
