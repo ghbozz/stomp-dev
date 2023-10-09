@@ -127,6 +127,14 @@ module Stomp
       completed
     end
 
+    def first_step?
+      current_step == steps.first
+    end
+
+    def last_step?
+      current_step == steps.last
+    end
+
     def all_steps_valid?(options = {})
       stored_step = options[:after] || current_step
 
