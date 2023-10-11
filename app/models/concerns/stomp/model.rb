@@ -50,38 +50,55 @@ module Stomp
     end
 
     def initialize(*args)
-      if args.first&.fetch(:serialized_steps_data, nil)
-        JSON.parse(args.first[:serialized_steps_data]).tap do |data|
-          self.steps_data = data
-          self.current_step = data["current_step"]
-          self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
-        end
-      end
-      
-      self.current_step ||= steps.first
-      self.completed_steps ||= []
-
+      set_stomp_defaults(args)
+      self.completed_steps ||= stomp_validation == :once ? steps.dup : []
       super
       update_attributes_from_step_data
     end
 
-    def step!(step)
-      return next_step! if step.to_sym == :next
-      return previous_step! if step.to_sym == :previous
-      return false unless steps.include?(step.to_sym)
-
-      if valid?
-        self.completed_steps << current_step unless completed_steps.include?(current_step)
-      else
-        self.completed_steps.delete(current_step)
+    def navigate_to_step(step)
+      update_completed_steps
+    
+      case stomp_validation
+      when :once then self.completed_steps = steps.dup
+      when :each_step then return false unless all_steps_valid?(after: step)
       end
-
-      if self.stomp_validation == :each_step
-        return all_steps_valid?(after: step) unless completed_steps.include?(step.to_sym)
-      end
-
+    
       self.current_step = step
     end
+
+    def step!(step)
+      return navigate_to_step(step) if steps.include?(step.to_sym)
+      return next_step! if step.to_sym == :next
+      return previous_step! if step.to_sym == :previous
+      false
+    end
+
+    def update_completed_steps
+      if valid?
+        completed_steps << current_step unless completed_steps.include?(current_step)
+      else
+        completed_steps.delete(current_step)
+      end
+    end
+
+    # def step!(step)
+    #   return next_step! if step.to_sym == :next
+    #   return previous_step! if step.to_sym == :previous
+    #   return false unless steps.include?(step.to_sym)
+
+    #   if valid?
+    #     self.completed_steps << current_step unless completed_steps.include?(current_step)
+    #   else
+    #     self.completed_steps.delete(current_step)
+    #   end
+
+    #   if self.stomp_validation == :each_step
+    #     return all_steps_valid?(after: step) unless completed_steps.include?(step.to_sym)
+    #   end
+
+    #   self.current_step = step
+    # end
 
     def next_step!
       if self.stomp_validation == :each_step
@@ -148,6 +165,23 @@ module Stomp
     end
 
     private
+
+    def set_stomp_defaults(args)
+      if args.first&.fetch(:serialized_steps_data, nil)
+        JSON.parse(args.first[:serialized_steps_data]).tap do |data|
+          self.steps_data = data
+          self.current_step = data["current_step"]
+          self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
+        end
+      end
+      
+      self.current_step ||= steps.first
+      self.completed_steps ||= []
+    end
+
+    # def set_completed_steps
+    #   self.completed_steps ||= stomp_validation == :once ? steps.dup : []
+    # end
 
     def update_attributes_from_step_data
       return if steps_data.nil?
