@@ -2,11 +2,13 @@ module Stomp
   module Model
     extend ActiveSupport::Concern
 
-    STOMP_ATTRIBUTES = [:current_step, :completed_steps, :completed, :steps_data, :serialized_steps_data]
+    STOMP_ATTRIBUTES = [:current_step, :previous_step, :completed_steps, :completed, :steps_data, :create_attempt, :serialized_steps_data]
     attr_accessor *STOMP_ATTRIBUTES
 
     included do
       class_attribute :steps, :steps_attributes, :steps_data, :stomp_validation
+
+      after_initialize :set_default_values
     end
 
     class_methods do
@@ -17,7 +19,7 @@ module Stomp
         define_method :serialized_steps_data do
           attributes
             .select { |k, _| steps_attributes.include?(k.to_sym) }
-            .merge(current_step: current_step, completed_steps: completed_steps)
+            .merge(current_step: current_step, previous_step: previous_step, create_attempt: create_attempt, completed_steps: completed_steps)
             .to_json
         end
 
@@ -50,31 +52,18 @@ module Stomp
     end
 
     def initialize(*args)
-      if args.first&.fetch(:serialized_steps_data, nil)
-        JSON.parse(args.first[:serialized_steps_data]).tap do |data|
-          self.steps_data = data
-          self.current_step = data["current_step"]
-          self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
-        end
-      end
-      
-      self.current_step ||= steps.first
-      self.completed_steps ||= []
-
+      deserialize_and_set_data(args.first&.fetch(:serialized_steps_data, nil))
       super
       update_attributes_from_step_data
     end
 
     def step!(step)
+      set_create_attempt!(step)
       return next_step! if step.to_sym == :next
       return previous_step! if step.to_sym == :previous
       return false unless steps.include?(step.to_sym)
 
-      if valid?
-        self.completed_steps << current_step unless completed_steps.include?(current_step)
-      else
-        self.completed_steps.delete(current_step)
-      end
+      update_completed_steps
 
       if self.stomp_validation == :each_step
         return all_steps_valid?(after: step) unless completed_steps.include?(step.to_sym)
@@ -84,16 +73,18 @@ module Stomp
     end
 
     def next_step!
+      update_completed_steps
+    
       if self.stomp_validation == :each_step
+        self.previous_step = current_step
         return false unless valid?
       end
-
+    
       if current_step == steps.last
         self.completed = true
         return false
       end
-
-      self.completed_steps << current_step if !completed_steps.include?(current_step)
+    
       index = steps.index(current_step)
       self.current_step = steps[index + 1]
     end
@@ -120,11 +111,20 @@ module Stomp
     end
 
     def current_step=(step)
+      @previous_step = @current_step.presence
       @current_step = step&.to_sym
+    end
+
+    def previous_step=(step)
+      @previous_step = step&.to_sym
     end
 
     def completed?
       completed
+    end
+
+    def create_attempt?
+      create_attempt
     end
 
     def first_step?
@@ -147,12 +147,47 @@ module Stomp
       true
     end
 
+    def should_validate?
+      return true if create_attempt
+      return true if current_step == previous_step
+
+      public_send("#{current_step}_attributes").any? { |attribute| public_send(attribute).present? }
+    end
+
     private
+
+    def set_create_attempt!(step)
+      step.to_sym == :create ? self.create_attempt = true : self.create_attempt = false
+    end
+
+    def update_completed_steps
+      return unless self.stomp_validation == :each_step
+
+      valid? ? self.completed_steps |= [current_step] : self.completed_steps.delete(current_step)
+    end
+    
+
+    def deserialize_and_set_data(serialized_data)
+      return unless serialized_data
+    
+      JSON.parse(serialized_data).tap do |data|
+        self.steps_data = data
+        self.previous_step = data["previous_step"]
+        self.current_step = data["current_step"]
+        self.create_attempt = data["create_attempt"]
+        self.completed_steps = data["completed_steps"]&.map(&:to_sym) || []
+      end
+    end
 
     def update_attributes_from_step_data
       return if steps_data.nil?
 
       steps_data.each { |k, v| send("#{k}=", v) if send(k).nil? }
+    end
+
+    def set_default_values
+      self.current_step ||= steps.first
+      self.completed_steps ||= []
     end
   end
 end

@@ -1,9 +1,11 @@
 <section class="mt-28">
   <h1 class="text-xl font-semibold block">My Post</h1>
 
-  <div class="border-t-2 mt-6 pt-6">
+  <div class="border-t-2 my-6 pt-6">
     <p><span class="text-gray-700 font-semibold">title:</span> <%= @post.title %></p>
     <p><span class="text-gray-700 font-semibold">description:</span> <%= @post.title %></p>
     <p><span class="text-gray-700 font-semibold">content:</span> <%= @post.content %></p>
   </div>
+
+  <%= link_to "new post", new_post_path, class: "bg-zinc-300 p-2 cursor-pointer shadow-sm rounded-sm" %>
 </section>
