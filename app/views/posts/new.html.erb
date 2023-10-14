@@ -9,7 +9,6 @@
       <% if f.object.current_step_is? :step_1 %>
         <%= f.input :title %>
         <%= f.input :author %>
-        <%= f.input :url %>
       <% end %>
 
       <% if f.object.current_step_is? :step_2 %>
@@ -18,6 +17,10 @@
 
       <% if f.object.current_step_is? :step_3 %>
         <%= f.input :content, input_html: { class: "w-full" } %>
+      <% end %>
+
+      <% if f.object.current_step_is? :step_4 %>
+        <%= f.input :url, input_html: { class: "w-full" } %>
       <% end %>
 
       <div class="mt-5">

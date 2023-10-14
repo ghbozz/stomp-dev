@@ -38,6 +38,10 @@ module Stomp
       def stomp!(options)
         self.stomp_validation = options[:validate]
       end
+
+      def define_conditional_steps(conditional_logic)
+        self.conditional_steps = conditional_logic
+      end
     end
   end
 end

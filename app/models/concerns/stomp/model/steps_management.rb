@@ -70,6 +70,14 @@ module Stomp
         current_step == steps.last
       end
 
+      def current_step_index
+        steps.index(current_step)
+      end
+
+      def step_index_for(step)
+        steps.index(step)
+      end
+
       private
 
       def set_create_attempt!(step)
