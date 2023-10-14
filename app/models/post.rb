@@ -9,7 +9,7 @@ class Post < ApplicationRecord
 
   define_step_validations step_1: { 
     title: { presence: true, length: { minimum: 5 } }, 
-    url: { presence: true } 
+    author: { presence: true }
   }
   
   define_step_validations step_2: PostDescriptionValidator

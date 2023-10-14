@@ -24,6 +24,6 @@ class PostsController < ApplicationController
   private
 
   def post_params
-    params.require(:post).permit(:title, :description, :content, :serialized_steps_data)
+    params.require(:post).permit(:title, :url, :author, :description, :content, :serialized_steps_data)
   end
 end
