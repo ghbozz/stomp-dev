@@ -1,7 +1,7 @@
 class Post < ApplicationRecord
   include Stomp::Model
 
-  stomp! validate: :each_step
+  stomp! validate: :once
   
   define_steps step_1: [:title, :author], 
                step_2: [:description], 
